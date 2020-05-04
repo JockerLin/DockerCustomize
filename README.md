@@ -9,7 +9,7 @@ docker pull blazarlin/python3.6-opencv3.4.0-docker
 也提供了一个opencv4.2.0的版本
 
 ```shell
-docker pull blazarlin/python3.6-opencv3.4.0-docker
+docker pull blazarlin/python3.6-opencv4.2.0-docker
 ```
 
 ## Why
