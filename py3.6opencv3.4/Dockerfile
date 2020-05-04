@@ -34,7 +34,7 @@ RUN \
   ln -sf /usr/local/bin/python3.6 /usr/bin/python && \
   rm -rf /Python-3.6.4.tar.xz /Python-3.6.4
 
-# pip(fail offen when internet is bad)
+# pip(fail offen when internet is bad, I resolve it by changing the software source of pip)
 # COPY ./get-pip.py /get-pip.py
 # RUN \
 #   python get-pip.py && \
@@ -67,43 +67,44 @@ ENV LANGUAGE en_HK:en
 ENV LC_ALL en_HK.UTF-8
 
 # OPENCV (change to the source)
-RUN \
-  pip install opencv-python==3.4.0.12
-# RUN pip install numpy
+# RUN \
+#   pip install opencv-python==3.4.0.12
+RUN pip install numpy
 
-# OPENCV
-# question: I build succeed, but I can't find cv2*.so in site-packages.
-# ENV OPENCV_VERSION="3.4.0"
-# COPY ${OPENCV_VERSION}.zip /${OPENCV_VERSION}.zip
-# # RUN wget https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip
-# RUN unzip ${OPENCV_VERSION}.zip \
-# && mkdir /opencv-${OPENCV_VERSION}/build \
-# && cd /opencv-${OPENCV_VERSION}/build \
-# && cmake -DBUILD_TIFF=ON \
-#   -DBUILD_opencv_java=OFF \
-#   -DBUILD_opencv_python3=ON \
-#   -DBUILD_SHARED_LIBS=ON \
-#   -DWITH_CUDA=OFF \
-#   -DWITH_OPENGL=ON \
-#   -DWITH_OPENCL=ON \
-#   -DWITH_IPP=ON \
-#   -DWITH_TBB=ON \
-#   -DWITH_EIGEN=ON \
-#   -DWITH_V4L=ON \
-#   -DBUILD_TESTS=OFF \
-#   -DBUILD_PERF_TESTS=OFF \
-#   -DINSTALL_PYTHON_EXAMPLES=ON \
-#   -DCMAKE_BUILD_TYPE=RELEASE \
-#   -DCMAKE_INSTALL_PREFIX=/user/local \
-#   -DPYTHON_EXECUTABLE=/usr/bin/python3 \
-#   -DPYTHON_INCLUDE_DIR=/usr/local/include/python3 \
-#   -DPYTHON_PACKAGES_PATH=/usr/local/lib/python3.6/site-packages \
-#   .. \
-# && make -j4 \
-# && make install && ldconfig
+# OPENCV (make sure c++ and python can both use)
+# question: I build succeed, but I can't find cv2*.so in site-packages, config python path error.
+# change version what u want. test succeed in 3.4.0, 4.2.0
+ENV OPENCV_VERSION="3.4.0"
+COPY ${OPENCV_VERSION}.zip /${OPENCV_VERSION}.zip
+# RUN wget https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip
+RUN unzip ${OPENCV_VERSION}.zip \
+&& mkdir /opencv-${OPENCV_VERSION}/build \
+&& cd /opencv-${OPENCV_VERSION}/build \
+&& cmake ..\
+    -DBUILD_TIFF=ON \
+    -DBUILD_opencv_java=OFF \
+    -DBUILD_opencv_python3=ON \
+    -DWITH_CUDA=OFF \
+    -DWITH_OPENGL=ON \
+    -DWITH_OPENCL=ON \
+    -DWITH_IPP=ON \
+    -DWITH_TBB=ON \
+    -DWITH_EIGEN=ON \
+    -DWITH_V4L=ON \
+    -DBUILD_TESTS=OFF \
+    -DBUILD_PERF_TESTS=OFF \
+    -DCMAKE_BUILD_TYPE=RELEASE \
+    -DBUILD_NEW_PYTHON_SUPPORT=ON \
+    -DBUILD_PYTHON_SUPPORT=ON \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DPYTHON3_EXECUTABLE=$(which python3.6) \
+    -DPYTHON3_INCLUDE_DIR=$(python3.6 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
+    -DPYTHON3_PACKAGES_PATH=$(python3.6 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())") \
+&& make -j4 \
+&& make install && ldconfig
 
-# RUN rm /${OPENCV_VERSION}.zip \
-# && rm -r /opencv-${OPENCV_VERSION}
+RUN rm /${OPENCV_VERSION}.zip \
+&& rm -r /opencv-${OPENCV_VERSION}
 
 # RUN ln -s \
 #   /usr/local/lib/python3.6/site-packages/cv2.cpython-36m-x86_64-linux-gnu.so \
